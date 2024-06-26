@@ -4,7 +4,7 @@
 namespace boids
 {
     void Boid::drawSelf(CanvasHandler* canvas) {
-        double dX = 6, dY = 6;
+        double dX = 5, dY = 5;
         double dir = this->dir();
 
         // Find relative rotated equilateral triangle points
@@ -15,7 +15,7 @@ namespace boids
         Coord2D relC((dX) * c - (0) * s, (dX) * s + (0) * c);             // Middle-right (1, 0) if dir = 0
         
         Coord2D pos2D = Coord2D(pos_.x, pos_.y); // WHEN 3D, actual pos is projected into integer Coord2D
-        canvas->drawWireframeTriangle(relA + pos2D, relB + pos2D, relC + pos2D, col_);
+        canvas->drawSolidTriangle(relA + pos2D, relB + pos2D, relC + pos2D, col_);
     }
 
     void Boid::updateVelocityFromRules(HomogCoord3D* v1, HomogCoord3D* v2, HomogCoord3D* v3) {

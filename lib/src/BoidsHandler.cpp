@@ -6,13 +6,30 @@ namespace boids
 {
     void BoidsHandler::initBoids(int numBoids) {
         std::mt19937 gen(rd_());
-        std::uniform_int_distribution<> distrX(0, canvas_->cWidth()-1);
-        std::uniform_int_distribution<> distrY(0, canvas_->cHeight()-1);
+        // INIT ALL BOIDS OFF SCREEN
+        std::uniform_int_distribution<> distrEdges(0, 3); // different cases for each edge of screen 
+        std::uniform_int_distribution<> distrX(0, canvas_->cWidth()-1); // random width of screen
+        std::uniform_int_distribution<> distrY(0, canvas_->cHeight()-1); // random height of screen
+        std::uniform_int_distribution<> distrDist(0, 50); // random distance from chosen edge of screen
         std::uniform_real_distribution<> distrDir(0, 2*PI);
 
         for (int i = 0; i < numBoids; ++i) {
-            Boid b(Coord2D(distrX(gen), distrY(gen)), distrDir(gen), white);
-            boids_.push_back(b);
+            Boid* b;
+            switch (distrEdges(gen)) {
+                case 0: // LEFT EDGE
+                    b = &Boid(Coord2D(-distrDist(gen), distrY(gen)), distrDir(gen), white);
+                    break;
+                case 1: // RIGHT EDGE
+                    b = &Boid(Coord2D(canvas_->cWidth()-1 + distrDist(gen), distrY(gen)), distrDir(gen), white);
+                    break;
+                case 2: // BOTTOM EDGE
+                    b = &Boid(Coord2D(distrX(gen), -distrDist(gen)), distrDir(gen), white);
+                    break;
+                case 3:
+                    b = &Boid(Coord2D(distrX(gen), canvas_->cHeight()-1 + distrDist(gen)), distrDir(gen), white);
+                    break;
+            }
+            boids_.push_back(*b);
         }
     }
 
