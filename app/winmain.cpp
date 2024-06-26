@@ -59,7 +59,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE NULLInstance, PSTR pCmdLine, i
     ShowWindow(windowHandle, nCmdShow);
     UpdateWindow(windowHandle);
 
-    boidsHandler.initBoids(75);
+    boidsHandler.initBoids(155);
 
     // Message loop
     while(!quit) {
@@ -70,7 +70,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE NULLInstance, PSTR pCmdLine, i
         canvas.setScreen(black);
         boidsHandler.updateAndDrawBoids();
 
-        // boidsHandler.drawAveragePosAndVels(&sumOfPosAndVel[0], &sumOfPosAndVel[1]);
+        boidsHandler.drawAveragePosAndVels();
 
         InvalidateRect(windowHandle, NULL, FALSE);
         UpdateWindow(windowHandle);

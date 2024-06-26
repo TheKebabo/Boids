@@ -23,9 +23,11 @@ namespace boids
         std::vector<Boid> boids_;
         double boundaryEffect_ = 50;
         double limitingSpeed_ = 1000;
+        double radiusOfVisibility_ = 60;
 
-        double seperation_ = 200;
-        double radiusOfVisibility_ = 100;
+        double alignPositionEffect_ = 0.01; // Larger = higher effect
+        double seperationEffect_ = 0.5;
+        double alignVelocityEffect_ = 0.125;
         CanvasHandler* canvas_;
         std::random_device rd_;
 

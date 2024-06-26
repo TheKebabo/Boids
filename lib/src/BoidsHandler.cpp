@@ -10,7 +10,7 @@ namespace boids
         std::uniform_int_distribution<> distrEdges(0, 3); // different cases for each edge of screen 
         std::uniform_int_distribution<> distrX(0, canvas_->cWidth()-1); // random width of screen
         std::uniform_int_distribution<> distrY(0, canvas_->cHeight()-1); // random height of screen
-        std::uniform_int_distribution<> distrDist(0, 50); // random distance from chosen edge of screen
+        std::uniform_int_distribution<> distrDist(0, 100); // random distance from chosen edge of screen
         std::uniform_real_distribution<> distrDir(0, 2*PI);
 
         for (int i = 0; i < numBoids; ++i) {
@@ -25,7 +25,7 @@ namespace boids
                 case 2: // BOTTOM EDGE
                     b = &Boid(Coord2D(distrX(gen), -distrDist(gen)), distrDir(gen), white);
                     break;
-                case 3:
+                case 3: // TOP EDGE
                     b = &Boid(Coord2D(distrX(gen), canvas_->cHeight()-1 + distrDist(gen)), distrDir(gen), white);
                     break;
             }
@@ -56,7 +56,7 @@ namespace boids
         for (Boid bOther : boids_) {
             if (&bOther != b) {
                 if ((b->pos() - bOther.pos()).norm() < radiusOfVisibility_) {
-                    avgPos = avgPos + b->pos();
+                    avgPos = avgPos + bOther.pos();
                     n++;
                 }
             }
@@ -64,9 +64,9 @@ namespace boids
 
         if (n > 0) {
             avgPos = avgPos / (double)n;
-            return (avgPos - b->pos()) / 100;
+            return (avgPos - b->pos()) * alignPositionEffect_;
         }
-        return HomogCoord3D(0, 0, 0, 0);
+        return avgPos;
     }
 
     // MAIN RULE 2: Boids try to keep a small distance away from other objects (only boids).
@@ -74,9 +74,9 @@ namespace boids
         HomogCoord3D c;
         for (Boid bOther : boids_) {
             if (&bOther != b) {
-                HomogCoord3D dPos = b->pos() - bOther.pos();
-                if (dPos.norm() < seperation_)
-                    c = c - dPos;   // Essentially doubles seperation
+                HomogCoord3D dPos = bOther.pos() - b->pos();
+                if (dPos.norm() < radiusOfVisibility_)
+                    c = c - dPos * seperationEffect_;   // Increases seperation
             }
         }
         return c;
@@ -90,7 +90,7 @@ namespace boids
         for (Boid bOther : boids_) {
             if (&bOther != b) {
                 if ((b->pos() - bOther.pos()).norm() < radiusOfVisibility_) {
-                    avgVel = avgVel + b->pos();
+                    avgVel = avgVel + bOther.velocity();
                     n++;
                 }
             }
@@ -98,9 +98,9 @@ namespace boids
 
         if (n > 0) {
             avgVel = avgVel / (double)n;
-            return (avgVel - b->pos()) / 8;
+            return (avgVel - b->pos()) * alignVelocityEffect_;
         }
-        return HomogCoord3D(0, 0, 0, 0);
+        return avgVel;
     }
 
     // Keep boid inside rough screen boundaries
@@ -109,17 +109,13 @@ namespace boids
         double xPos = b->pos().x, yPos = b->pos().y;
 
         if (xPos < 0)
-            // v.x = boundaryEffect_ * sqrt(-xPos);
             v.x = boundaryEffect_;
         else if (xPos >= canvas_->cWidth()) 
-            // v.x = -boundaryEffect_ * sqrt(xPos - canvas_->cWidth() + 1);
             v.x = -boundaryEffect_;
         
         if (yPos < 0)
-            // v.y = boundaryEffect_ * sqrt(-yPos);
             v.y = boundaryEffect_;
         else if (yPos >= canvas_->cHeight()) 
-            // v.y = -boundaryEffect_ * sqrt(yPos - canvas_->cHeight() + 1);
             v.y = -boundaryEffect_;
         
         utilities::outputVal(v.norm());

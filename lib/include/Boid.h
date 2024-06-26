@@ -52,7 +52,7 @@ namespace boids
     private:
         HomogCoord3D pos_; // (w != 0)
         HomogCoord3D velocity_ = HomogCoord3D(1, 0, 0, 0); // (w = 0)
-        double speed_ = 0.005;
+        double speed_ = 0.01;
         uint32_t col_;
     };
 }
