@@ -17,7 +17,10 @@ namespace boids
         std::vector<HomogCoord3D> drawBoids();
 
         // Updates boids' velocities and positions based on the 'rules'
-        void updateBoids(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVel);
+        void updateBoids(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels);
+
+        // DEBUG to show average positions and velocities
+        void drawAveragePosAndVels(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels);
 
     private:
         std::vector<Boid> boids_;

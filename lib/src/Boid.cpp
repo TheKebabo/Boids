@@ -4,7 +4,7 @@
 namespace boids
 {
     void Boid::drawSelf(CanvasHandler* canvas) {
-        double dX = 8, dY = 8;
+        double dX = 6, dY = 6;
         double dir = this->dir();
 
         // Find relative rotated equilateral triangle points
@@ -20,10 +20,10 @@ namespace boids
 
     void Boid::updateVelocityFromRules(HomogCoord3D* v1, HomogCoord3D* v2, HomogCoord3D* v3) {
         velocity_ = velocity_ + *v1 + *v2 + *v3;
+        velocity_.w = 0;
     }
 
     void Boid::updatePos() {
-        pos_ = pos_ + velocity_;
-        ;
+        pos_ = (pos_ + velocity_ * speed_);
     }
 }

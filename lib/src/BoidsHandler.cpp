@@ -17,8 +17,8 @@ namespace boids
     }
 
     std::vector<HomogCoord3D> BoidsHandler::drawBoids() {
-        HomogCoord3D sumOfPos;
-        HomogCoord3D sumOfVels;
+        HomogCoord3D sumOfPos(0, 0, 0, 1);
+        HomogCoord3D sumOfVels(0, 0, 0, 0);
         for (Boid b : boids_) {
             b.drawSelf(canvas_);
             sumOfPos = sumOfPos + b.pos();
@@ -28,12 +28,12 @@ namespace boids
         return returnVals;
     }
 
-    void BoidsHandler::updateBoids(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVel) {
+    void BoidsHandler::updateBoids(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels) {
         for (int i = 0; i < boids_.size(); ++i) {
             Boid* b = &boids_[i];
             HomogCoord3D v1 = rule1_(b, sumOfPos);
             HomogCoord3D v2 = rule2_(b);
-            HomogCoord3D v3 = rule3_(b, sumOfVel);
+            HomogCoord3D v3 = rule3_(b, sumOfVels);
             b->updateVelocityFromRules(&v1, &v2, &HomogCoord3D(0, 0, 0, 0));
             b->updatePos();
         }
@@ -70,5 +70,15 @@ namespace boids
         HomogCoord3D sumWithoutCurrent = *sumOfVels - b->velocity();
         HomogCoord3D avg = sumWithoutCurrent  / ((double)boids_.size()-1);
         return (avg - b->velocity()) / 8;
+    }
+
+    // DEBUG METHODS
+
+    void BoidsHandler::drawAveragePosAndVels(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels) {
+        HomogCoord3D avgPos = *sumOfPos / (double)boids_.size();
+        HomogCoord3D avgVels = *sumOfVels / (double)boids_.size();
+        Boid* b = &Boid(avgPos, pink);
+        b->setVelocity(avgVels);
+        b->drawSelf(canvas_);
     }
 }

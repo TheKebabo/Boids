@@ -30,6 +30,10 @@ namespace boids
             velocity_ = newVUnscaled * velocity_.norm();
         }
         const double dir() { return atan2(velocity_.y, velocity_.x); }
+        void setVelocity(HomogCoord3D &vel) {
+            if (vel.w == 0)
+                velocity_ = vel;
+        }
         
         void updateVelocityFromRules(HomogCoord3D* v1, HomogCoord3D* v2, HomogCoord3D* v3);
         HomogCoord3D& velocity() { return velocity_; }
@@ -41,6 +45,7 @@ namespace boids
     private:
         HomogCoord3D pos_; // (w != 0)
         HomogCoord3D velocity_ = HomogCoord3D(1, 0, 0, 0); // (w = 0)
+        double speed_ = 0.05;
         uint32_t col_;
     };
 }

@@ -9,6 +9,7 @@ namespace graphics
       enum Colors
       {
             red = 0xFF0000,
+            pink = 0xED8C9E,
             green = 0x00FF00,
             blue = 0x0000FF,
             yellow = 0XFFFF00,

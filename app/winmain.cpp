@@ -59,7 +59,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE NULLInstance, PSTR pCmdLine, i
     ShowWindow(windowHandle, nCmdShow);
     UpdateWindow(windowHandle);
 
-    boidsHandler.initBoids(50);
+    boidsHandler.initBoids(15);
 
     // Message loop
     while(!quit) {
@@ -70,6 +70,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE NULLInstance, PSTR pCmdLine, i
         canvas.setScreen(black);
         std::vector<HomogCoord3D> sumOfPosAndVel = boidsHandler.drawBoids();
         boidsHandler.updateBoids(&sumOfPosAndVel[0], &sumOfPosAndVel[1]);
+
+        boidsHandler.drawAveragePosAndVels(&sumOfPosAndVel[0], &sumOfPosAndVel[1]);
 
         InvalidateRect(windowHandle, NULL, FALSE);
         UpdateWindow(windowHandle);
