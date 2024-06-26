@@ -41,13 +41,14 @@ namespace boids
             HomogCoord3D v3 = alignVelocities_(b);
             HomogCoord3D v4 = boundPosition_(b);
             b->updateVelocity(v1 + v2 + v3 + v4);
+            limitSpeed_(b);
             b->updatePos();
     
             b->drawSelf(canvas_);
         }
     }
 
-    // RULE 1: Boids try to fly towards the centre of mass of neighbouring boids
+    // MAIN RULE 1: Boids try to fly towards the centre of mass of neighbouring boids
     HomogCoord3D BoidsHandler::alignPosition_(Boid* b) {
         // 'Percieved' CofM for all boids but one is found by summing all other boid positions IN SOME RADIUS and dividing by N
         HomogCoord3D avgPos;
@@ -68,23 +69,20 @@ namespace boids
         return HomogCoord3D(0, 0, 0, 0);
     }
 
-    // RULE 2: Boids try to keep a small distance away from other objects (only boids).
+    // MAIN RULE 2: Boids try to keep a small distance away from other objects (only boids).
     HomogCoord3D BoidsHandler::seperateIfNearby_(Boid* b) {
         HomogCoord3D c;
         for (Boid bOther : boids_) {
             if (&bOther != b) {
-                HomogCoord3D bPos = b->pos();
-                HomogCoord3D bOtherPos = bOther.pos();
-                // HomogCoord3D dPos = bOtherPos - bPos;
                 HomogCoord3D dPos = b->pos() - bOther.pos();
-                if (dPos.norm() < radiusOfVisibility_)
-                    c = c - dPos;
+                if (dPos.norm() < seperation_)
+                    c = c - dPos;   // Essentially doubles seperation
             }
         }
         return c;
     }
 
-    // RULE 3: Boids try to match velocity with near boids
+    // MAIN RULE 3: Boids try to match velocity with near boids
     HomogCoord3D BoidsHandler::alignVelocities_(Boid* b) {
         // 'Percieved' average velocity for all boids but one is found by summing all other boid velocities IN SOME RADIUS and dividing by N
         HomogCoord3D avgVel;
@@ -107,7 +105,7 @@ namespace boids
 
     // Keep boid inside rough screen boundaries
     HomogCoord3D BoidsHandler::boundPosition_(Boid* b) {
-        HomogCoord3D v = HomogCoord3D(0, 0, 0, 0);
+        HomogCoord3D v;
         double xPos = b->pos().x, yPos = b->pos().y;
 
         if (xPos < 0)
@@ -126,6 +124,12 @@ namespace boids
         
         utilities::outputVal(v.norm());
         return v;
+    }
+
+    // Ensure magnitude of velocities don't become unrealistically high
+    void BoidsHandler::limitSpeed_(Boid* b) {
+        if (b->velocity().norm() > limitingSpeed_)
+            b->setVelocity(b->velocity().normalised() * limitingSpeed_);
     }
 
     // DEBUG METHODS

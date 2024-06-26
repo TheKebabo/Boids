@@ -22,6 +22,9 @@ namespace boids
     private:
         std::vector<Boid> boids_;
         double boundaryEffect_ = 50;
+        double limitingSpeed_ = 1000;
+
+        double seperation_ = 200;
         double radiusOfVisibility_ = 100;
         CanvasHandler* canvas_;
         std::random_device rd_;
@@ -30,5 +33,6 @@ namespace boids
         HomogCoord3D seperateIfNearby_(Boid* b);
         HomogCoord3D alignVelocities_(Boid* b);
         HomogCoord3D boundPosition_(Boid* b);
+        void limitSpeed_(Boid* b);
     };
 }
