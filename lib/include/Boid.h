@@ -17,6 +17,11 @@ namespace boids
             setPos(pos);
             setDir(dir);
         }
+        Boid(HomogCoord3D &pos, HomogCoord3D vel, Colors col) : pos_(pos), col_(col) {
+            setPos(pos);
+            velocity_ = vel;
+            velocity_.w = 0;
+        }
 
         void setPos(HomogCoord3D &pos) {
             pos_ = pos;
@@ -31,11 +36,13 @@ namespace boids
         }
         const double dir() { return atan2(velocity_.y, velocity_.x); }
         void setVelocity(HomogCoord3D &vel) {
-            if (vel.w == 0)
-                velocity_ = vel;
+            velocity_ = vel;
+            velocity_.w = 0;
         }
-        
-        void updateVelocityFromRules(HomogCoord3D* v1, HomogCoord3D* v2, HomogCoord3D* v3);
+        void updateVelocity(HomogCoord3D &vel) {
+            velocity_ = velocity_ + vel;
+            velocity_.w = 0;
+        }
         HomogCoord3D& velocity() { return velocity_; }
 
         void setCol(Colors col) { col_ = col; }

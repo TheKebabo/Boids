@@ -13,22 +13,22 @@ namespace boids
 
         void setCanvasHandler(CanvasHandler* canvas) { canvas_ = canvas; }
 
-        // Draws current state of each boid, also summing their positions and velocities for rules 1 and 3 respectively 
-        std::vector<HomogCoord3D> drawBoids();
-
-        // Updates boids' velocities and positions based on the 'rules'
-        void updateBoids(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels);
+        // Updates boids' velocities and positions based on the 'rules', and draws them
+        void updateAndDrawBoids();
 
         // DEBUG to show average positions and velocities
-        void drawAveragePosAndVels(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels);
+        void drawAveragePosAndVels();
 
     private:
         std::vector<Boid> boids_;
+        double boundaryEffect_ = 50;
+        double radiusOfVisibility_ = 100;
         CanvasHandler* canvas_;
         std::random_device rd_;
 
-        HomogCoord3D rule1_(Boid* b, HomogCoord3D* sumOfPos);
-        HomogCoord3D rule2_(Boid* b);
-        HomogCoord3D rule3_(Boid* b, HomogCoord3D* sumOfVels);
+        HomogCoord3D alignPosition_(Boid* b);
+        HomogCoord3D seperateIfNearby_(Boid* b);
+        HomogCoord3D alignVelocities_(Boid* b);
+        HomogCoord3D boundPosition_(Boid* b);
     };
 }

@@ -33,69 +33,112 @@ namespace boids
         }
     }
 
-    std::vector<HomogCoord3D> BoidsHandler::drawBoids() {
-        HomogCoord3D sumOfPos(0, 0, 0, 1);
-        HomogCoord3D sumOfVels(0, 0, 0, 0);
-        for (Boid b : boids_) {
-            b.drawSelf(canvas_);
-            sumOfPos = sumOfPos + b.pos();
-            sumOfVels = sumOfVels + b.velocity();
-        }
-        std::vector<HomogCoord3D> returnVals = std::vector<HomogCoord3D> { sumOfPos, sumOfVels };
-        return returnVals;
-    }
-
-    void BoidsHandler::updateBoids(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels) {
+    void BoidsHandler::updateAndDrawBoids() {
         for (int i = 0; i < boids_.size(); ++i) {
             Boid* b = &boids_[i];
-            HomogCoord3D v1 = rule1_(b, sumOfPos);
-            HomogCoord3D v2 = rule2_(b);
-            HomogCoord3D v3 = rule3_(b, sumOfVels);
-            b->updateVelocityFromRules(&v1, &v2, &HomogCoord3D(0, 0, 0, 0));
+            HomogCoord3D v1 = alignPosition_(b);
+            HomogCoord3D v2 = seperateIfNearby_(b);
+            HomogCoord3D v3 = alignVelocities_(b);
+            HomogCoord3D v4 = boundPosition_(b);
+            b->updateVelocity(v1 + v2 + v3 + v4);
             b->updatePos();
+    
+            b->drawSelf(canvas_);
         }
     }
 
     // RULE 1: Boids try to fly towards the centre of mass of neighbouring boids
-    HomogCoord3D BoidsHandler::rule1_(Boid* b, HomogCoord3D* sumOfPos) {
-        // 'Percieved' CofM for all boids but one is found by summing all other boid positions and dividing by N - 1
-        // - can be achieved by summing all, and then subtracting each boid's position sequentially
-        HomogCoord3D sumWithoutCurrent = *sumOfPos - b->pos();
-        HomogCoord3D cOfM = sumWithoutCurrent / ((double)boids_.size()-1);
-        return (cOfM - b->pos()) / 100;
+    HomogCoord3D BoidsHandler::alignPosition_(Boid* b) {
+        // 'Percieved' CofM for all boids but one is found by summing all other boid positions IN SOME RADIUS and dividing by N
+        HomogCoord3D avgPos;
+        unsigned n = 0;
+        for (Boid bOther : boids_) {
+            if (&bOther != b) {
+                if ((b->pos() - bOther.pos()).norm() < radiusOfVisibility_) {
+                    avgPos = avgPos + b->pos();
+                    n++;
+                }
+            }
+        }
+
+        if (n > 0) {
+            avgPos = avgPos / (double)n;
+            return (avgPos - b->pos()) / 100;
+        }
+        return HomogCoord3D(0, 0, 0, 0);
     }
 
-    // RULE 2: Boids try to keep a small distance away from other objects (including only boids for now).
-    HomogCoord3D BoidsHandler::rule2_(Boid* b) {
+    // RULE 2: Boids try to keep a small distance away from other objects (only boids).
+    HomogCoord3D BoidsHandler::seperateIfNearby_(Boid* b) {
         HomogCoord3D c;
         for (Boid bOther : boids_) {
             if (&bOther != b) {
                 HomogCoord3D bPos = b->pos();
                 HomogCoord3D bOtherPos = bOther.pos();
-                HomogCoord3D dPos = bOtherPos - bPos;
-                if (dPos.norm() < 100)
+                // HomogCoord3D dPos = bOtherPos - bPos;
+                HomogCoord3D dPos = b->pos() - bOther.pos();
+                if (dPos.norm() < radiusOfVisibility_)
                     c = c - dPos;
             }
         }
         return c;
     }
 
-    // RULE 3: Boids try to match velocity with near boids.
-    HomogCoord3D BoidsHandler::rule3_(Boid* b, HomogCoord3D* sumOfVels) {
-        // 'Percieved' average velocity for all boids but one is found by summing all other boid positions and dividing by N - 1
-        // - can be achieved by summing all, and then subtracting each boid's position sequentially
-        HomogCoord3D sumWithoutCurrent = *sumOfVels - b->velocity();
-        HomogCoord3D avg = sumWithoutCurrent  / ((double)boids_.size()-1);
-        return (avg - b->velocity()) / 8;
+    // RULE 3: Boids try to match velocity with near boids
+    HomogCoord3D BoidsHandler::alignVelocities_(Boid* b) {
+        // 'Percieved' average velocity for all boids but one is found by summing all other boid velocities IN SOME RADIUS and dividing by N
+        HomogCoord3D avgVel;
+        unsigned n = 0;
+        for (Boid bOther : boids_) {
+            if (&bOther != b) {
+                if ((b->pos() - bOther.pos()).norm() < radiusOfVisibility_) {
+                    avgVel = avgVel + b->pos();
+                    n++;
+                }
+            }
+        }
+
+        if (n > 0) {
+            avgVel = avgVel / (double)n;
+            return (avgVel - b->pos()) / 8;
+        }
+        return HomogCoord3D(0, 0, 0, 0);
+    }
+
+    // Keep boid inside rough screen boundaries
+    HomogCoord3D BoidsHandler::boundPosition_(Boid* b) {
+        HomogCoord3D v = HomogCoord3D(0, 0, 0, 0);
+        double xPos = b->pos().x, yPos = b->pos().y;
+
+        if (xPos < 0)
+            // v.x = boundaryEffect_ * sqrt(-xPos);
+            v.x = boundaryEffect_;
+        else if (xPos >= canvas_->cWidth()) 
+            // v.x = -boundaryEffect_ * sqrt(xPos - canvas_->cWidth() + 1);
+            v.x = -boundaryEffect_;
+        
+        if (yPos < 0)
+            // v.y = boundaryEffect_ * sqrt(-yPos);
+            v.y = boundaryEffect_;
+        else if (yPos >= canvas_->cHeight()) 
+            // v.y = -boundaryEffect_ * sqrt(yPos - canvas_->cHeight() + 1);
+            v.y = -boundaryEffect_;
+        
+        utilities::outputVal(v.norm());
+        return v;
     }
 
     // DEBUG METHODS
 
-    void BoidsHandler::drawAveragePosAndVels(HomogCoord3D* sumOfPos, HomogCoord3D* sumOfVels) {
-        HomogCoord3D avgPos = *sumOfPos / (double)boids_.size();
-        HomogCoord3D avgVels = *sumOfVels / (double)boids_.size();
-        Boid* b = &Boid(avgPos, pink);
-        b->setVelocity(avgVels);
-        b->drawSelf(canvas_);
+    void BoidsHandler::drawAveragePosAndVels() {
+        HomogCoord3D avgPos, avgVel;
+        for (Boid b : boids_) {
+            avgPos = avgPos + b.pos();
+            avgVel = avgVel + b.velocity();
+        }
+        avgPos = avgPos / (double)boids_.size();
+        avgVel = avgVel / (double)boids_.size();
+        Boid b = Boid(avgPos, avgVel, pink);
+        b.drawSelf(canvas_);
     }
 }
