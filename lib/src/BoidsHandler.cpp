@@ -40,7 +40,7 @@ namespace boids
             HomogCoord3D v2 = seperateIfNearby_(b);
             HomogCoord3D v3 = alignVelocities_(b);
             HomogCoord3D v4 = boundPosition_(b);
-            HomogCoord3D v5;
+            HomogCoord3D v5(0, 0, 0, 0);
             if (mouseIsDown)
                 v5 = tendToPos_(b, mousePos);
             b->setVelocity(b->velocity() + v1 + v2 + v3 + v4 + v5);
