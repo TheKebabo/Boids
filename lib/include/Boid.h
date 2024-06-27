@@ -1,6 +1,9 @@
+#include <stdexcept>
 #include "CanvasHandler.h"
 #include "LinAlg.h"
 #include "MiscMaths.h"
+
+#pragma once
 
 using namespace graphics;
 namespace boids
@@ -19,36 +22,35 @@ namespace boids
         }
         Boid(HomogCoord3D &pos, HomogCoord3D vel, Colors col) : pos_(pos), col_(col) {
             setPos(pos);
-            velocity_ = vel;
-            velocity_.w = 0;
+            setVelocity(vel);
         }
 
         void setPos(HomogCoord3D &pos) {
+            if (pos.w == 0)            
+                throw("Cannot set a vector as boid's position");
+            if (pos.w != 1)            
+                throw("HomgCoord must be in canonical (cartesian) form");
             pos_ = pos;
-            pos_.w = 1;
         }
         void updatePos();   // Updates position from its velocity
         HomogCoord3D& pos() { return pos_; }
 
         void setDir(double dir) {
             HomogCoord3D newVUnscaled = (HomogCoord3D(cos(dir), sin(dir), 0, 0)).normalised();
-            velocity_ = newVUnscaled * velocity_.norm();
+            setVelocity(newVUnscaled * velocity_.norm());
         }
         const double dir() { return atan2(velocity_.y, velocity_.x); }
         void setVelocity(HomogCoord3D &vel) {
+            if (vel.w != 0)            
+                throw("Cannot set a position as boid's velocity");
             velocity_ = vel;
-            velocity_.w = 0;
-        }
-        void updateVelocity(HomogCoord3D &vel) {
-            velocity_ = velocity_ + vel;
-            velocity_.w = 0;
         }
         HomogCoord3D& velocity() { return velocity_; }
 
         void setCol(Colors col) { col_ = col; }
         const uint32_t col() { return col_; }
 
-        void drawSelf(CanvasHandler* canvas);
+        void drawSelf2D(CanvasHandler* canvas);
     private:
         HomogCoord3D pos_; // (w != 0)
         HomogCoord3D velocity_ = HomogCoord3D(1, 0, 0, 0); // (w = 0)

@@ -33,39 +33,41 @@ namespace boids
         }
     }
 
-    void BoidsHandler::updateAndDrawBoids() {
+    void BoidsHandler::updateAndDrawBoids(HomogCoord3D mousePos) {
         for (int i = 0; i < boids_.size(); ++i) {
             Boid* b = &boids_[i];
             HomogCoord3D v1 = alignPosition_(b);
             HomogCoord3D v2 = seperateIfNearby_(b);
             HomogCoord3D v3 = alignVelocities_(b);
             HomogCoord3D v4 = boundPosition_(b);
-            b->updateVelocity(v1 + v2 + v3 + v4);
+            HomogCoord3D v5;
+            if (mouseIsDown)
+                v5 = tendToPos_(b, mousePos);
+            b->setVelocity(b->velocity() + v1 + v2 + v3 + v4 + v5);
             limitSpeed_(b);
             b->updatePos();
     
-            b->drawSelf(canvas_);
+            b->drawSelf2D(canvas_);
         }
     }
 
     // MAIN RULE 1: Boids try to fly towards the centre of mass of neighbouring boids
     HomogCoord3D BoidsHandler::alignPosition_(Boid* b) {
-        // 'Percieved' CofM for all boids but one is found by summing all other boid positions IN SOME RADIUS and dividing by N
-        HomogCoord3D avgPos;
-        unsigned n = 0;
+        // 'Percieved' CofM for a boid is found by summing all other boid positions IN SOME RADIUS and dividing by N (stored in W componenet)
+        HomogCoord3D avgPos(0, 0, 0, 0);
         for (Boid bOther : boids_) {
             if (&bOther != b) {
                 if ((b->pos() - bOther.pos()).norm() < radiusOfVisibility_) {
                     avgPos = avgPos + bOther.pos();
-                    n++;
                 }
             }
         }
 
-        if (n > 0) {
-            avgPos = avgPos / (double)n;
+        if (avgPos.w > 0) {
+            avgPos = avgPos.canonical();
             return (avgPos - b->pos()) * alignPositionEffect_;
         }
+        avgPos.w = 0;   // Want to return a vector, not a position
         return avgPos;
     }
 
@@ -79,13 +81,14 @@ namespace boids
                     c = c - dPos * seperationEffect_;   // Increases seperation
             }
         }
+        c.w = 0;
         return c;
     }
 
     // MAIN RULE 3: Boids try to match velocity with near boids
     HomogCoord3D BoidsHandler::alignVelocities_(Boid* b) {
-        // 'Percieved' average velocity for all boids but one is found by summing all other boid velocities IN SOME RADIUS and dividing by N
-        HomogCoord3D avgVel;
+        // 'Percieved' average velocity for a boid is found by summing all other boid velocities IN SOME RADIUS and dividing by N
+        HomogCoord3D avgVel(0, 0, 0, 0);
         unsigned n = 0;
         for (Boid bOther : boids_) {
             if (&bOther != b) {
@@ -98,14 +101,14 @@ namespace boids
 
         if (n > 0) {
             avgVel = avgVel / (double)n;
-            return (avgVel - b->pos()) * alignVelocityEffect_;
+            return (avgVel - b->velocity()) * alignVelocityEffect_;
         }
         return avgVel;
     }
 
     // Keep boid inside rough screen boundaries
     HomogCoord3D BoidsHandler::boundPosition_(Boid* b) {
-        HomogCoord3D v;
+        HomogCoord3D v(0, 0, 0, 0);
         double xPos = b->pos().x, yPos = b->pos().y;
 
         if (xPos < 0)
@@ -118,8 +121,12 @@ namespace boids
         else if (yPos >= canvas_->cHeight()) 
             v.y = -boundaryEffect_;
         
-        utilities::outputVal(v.norm());
         return v;
+    }
+
+    // Boids close to position tend toward it
+    HomogCoord3D BoidsHandler::tendToPos_(Boid* b, HomogCoord3D pos) {
+        return (pos - b->pos()) * tendToPosEffect_;
     }
 
     // Ensure magnitude of velocities don't become unrealistically high
@@ -131,14 +138,14 @@ namespace boids
     // DEBUG METHODS
 
     void BoidsHandler::drawAveragePosAndVels() {
-        HomogCoord3D avgPos, avgVel;
+        HomogCoord3D avgPos(0, 0, 0, 0), avgVel(0, 0, 0, 0);
         for (Boid b : boids_) {
             avgPos = avgPos + b.pos();
             avgVel = avgVel + b.velocity();
         }
-        avgPos = avgPos / (double)boids_.size();
+        avgPos = avgPos.canonical();
         avgVel = avgVel / (double)boids_.size();
         Boid b = Boid(avgPos, avgVel, pink);
-        b.drawSelf(canvas_);
+        b.drawSelf2D(canvas_);
     }
 }

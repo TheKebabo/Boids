@@ -5,7 +5,7 @@
 using namespace boids;
 
 static graphics::CanvasHandler canvas;
-static BoidsHandler boidsHandler;
+static boids::BoidsHandler boidsHandler;
 
 static MSG msg;
 bool quit;
@@ -53,7 +53,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE NULLInstance, PSTR pCmdLine, i
         return false;
     
     // Hide cursor
-    while(ShowCursor(false)>=0);
+    // while(ShowCursor(false)>=0);
 
     // Show and paint window
     ShowWindow(windowHandle, nCmdShow);
@@ -68,9 +68,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE NULLInstance, PSTR pCmdLine, i
 
         // BOID-SPECIFIC UPDATE LOOP
         canvas.setScreen(black);
-        boidsHandler.updateAndDrawBoids();
+        POINT cursorPoint;
+        GetCursorPos(&cursorPoint);
+        cursorPoint.y = canvas.cHeight() - cursorPoint.y;
+        boidsHandler.updateAndDrawBoids(HomogCoord3D(cursorPoint.x, cursorPoint.y, 0, 1));
 
-        boidsHandler.drawAveragePosAndVels();
+        // boidsHandler.drawAveragePosAndVels();
 
         InvalidateRect(windowHandle, NULL, FALSE);
         UpdateWindow(windowHandle);
@@ -79,7 +82,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE NULLInstance, PSTR pCmdLine, i
     return 0;
 }
 
-LRESULT CALLBACK WindowProcessMessage(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK WindowProcessMessage(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam) { 
+    using namespace messages;
     switch(message) {
         case WM_QUIT:
         case WM_DESTROY: {
@@ -96,6 +100,14 @@ LRESULT CALLBACK WindowProcessMessage(HWND windowHandle, UINT message, WPARAM wP
 
             handleSize(frameBitmap, &frameBitmapInfo, frameDeviceContext, width, height, &canvas);
         } break; 
+
+        case WM_LBUTTONDOWN: {
+            handleMouse(&boidsHandler, true);
+        } break;
+
+        case WM_LBUTTONUP: {
+            handleMouse(&boidsHandler, false);
+        } break;
 
         default: {
             return DefWindowProc(windowHandle, message, wParam, lParam);

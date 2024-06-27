@@ -1,8 +1,7 @@
 #include <windows.h>
 #include "MessageHandling.h"
-#include "CanvasHandler.h"
 
-namespace boids
+namespace messages
 {
     void handlePaint(HWND windowHandle, HDC frameDeviceContext) {
         static PAINTSTRUCT paint;
@@ -18,7 +17,6 @@ namespace boids
     }
 
     void handleSize(HBITMAP frameBitmap, BITMAPINFO* frameBitmapInfo, HDC frameDeviceContext, int width, int height, graphics::CanvasHandler* canvas) {
-
             frameBitmapInfo->bmiHeader.biWidth  = width;
             frameBitmapInfo->bmiHeader.biHeight = height;
 
@@ -33,5 +31,9 @@ namespace boids
 
     bool handleQuit() {   
         return true;
+    }
+
+    void handleMouse(boids::BoidsHandler* bh, bool mouseIsDown) {
+        bh->mouseIsDown = mouseIsDown;
     }
 }

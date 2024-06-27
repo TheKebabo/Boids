@@ -3,7 +3,7 @@
 
 namespace boids
 {
-    void Boid::drawSelf(CanvasHandler* canvas) {
+    void Boid::drawSelf2D(CanvasHandler* canvas) {
         double dX = 4, dY = 4;
         double dir = this->dir();
 
